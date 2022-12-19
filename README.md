@@ -1,7 +1,6 @@
 # Digits-Recognition
 Development an application that recognizes digits
 
-Project description.
 The goal of this project is development of the application that recognizes digits. The application learns
 to recognize the printed digits (0 – 9). The digits are created in the Paint application and stored in
 BMP format. The main methods are used for recognition are: Histogram of Oriented Gradients (HOG),
