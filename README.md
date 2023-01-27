@@ -1,4 +1,4 @@
-# Digits-Recognition
+# Digits Recognition
 Development an application that recognizes digits
 
 The goal of this project is development of the application that recognizes digits. The application learns
