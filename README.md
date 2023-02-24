@@ -7,4 +7,4 @@ The digits are created in the Paint application and stored in BMP format.<br/>
 The main methods are used for recognition are: Histogram of Oriented Gradients (HOG),<br/>
 Artificial Neural Network (ANN). The project is developed in C++ using OpenCV library.<br/>
 Also, the project includes HOG part developed in Python, demonstrating how the method works.<br/> 
-See Course project.pdf for the details.
+See "Course project.pdf" for the details.
