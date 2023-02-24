@@ -1,10 +1,10 @@
 # Digits Recognition
 
-## Development an application that recognizes digits.
-
-The goal of this project is development of the application that recognizes digits. The application learns
-to recognize the printed digits (0 – 9). The digits are created in the Paint application and stored in
-BMP format. The main methods are used for recognition are: Histogram of Oriented Gradients (HOG),
-Artificial Neural Network (ANN). The project is developed in C++ using OpenCV library. 
-Also, the project includes HOG part developed in Python, demonstrating how the method works. 
+Development an application that recognizes digits.<br />
+The goal of this project is development of the application that recognizes digits.<br /> 
+The application learns to recognize the printed digits (0 – 9).<br />
+The digits are created in the Paint application and stored in BMP format.<br /> 
+The main methods are used for recognition are: Histogram of Oriented Gradients (HOG),<br />
+Artificial Neural Network (ANN). The project is developed in C++ using OpenCV library.<br />
+Also, the project includes HOG part developed in Python, demonstrating how the method works.<br /> 
 See Course project.pdf for the details.
