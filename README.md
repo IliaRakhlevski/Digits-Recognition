@@ -1,6 +1,7 @@
 # Digits Recognition
+## AFEKA - Tel-Aviv Academic College Of Engineering<br/>Department: Intelligent Systems<br/>Course: Introduction To Intelligent Systems
 
-Development an application that recognizes digits.<br/>
+**Course project:**Development an application that recognizes digits.<br/>
 The goal of this project is development of the application that recognizes digits.<br/> 
 The application learns to recognize the printed digits (0 – 9).<br/>
 The digits are created in the Paint application and stored in BMP format.<br/> 
