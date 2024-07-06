@@ -2,6 +2,7 @@
 ## AFEKA - Tel-Aviv Academic College Of Engineering<br/>Department: Intelligent Systems<br/>Course: Introduction To Intelligent Systems
 
 **Course project:** Development an application that recognizes digits.<br/>
+**Project Completion Date:** 2019<br/>
 **Tools:** C++, OpenCV, Visual Studio 2017, Python, Spyder.<br/>
 
 The goal of this project is development of the application that recognizes digits.<br/> 
