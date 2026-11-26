@@ -1,0 +1,68 @@
+# CI for Digits-Recognition.
+#
+# On every push to main and on every pull request:
+#   1. The C++ program is built with CMake, GCC and OpenCV on Linux.
+#   2. The saved weights (weights.dat) must recognize all 42 images in testing_images.
+#   3. Training from random weights must finish: all 70 training images recognized correctly.
+#   4. The HOG demonstration (hog.py) runs without errors (plots are not shown).
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  cpp:
+    name: Linux - build and test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15        # stop a stuck job instead of waiting up to 6 hours
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install OpenCV
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libopencv-dev
+
+      - name: Build
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build
+
+      # menu: 7 - load weights, 8 - test testing_images, 0 - exit
+      - name: Test the saved weights
+        run: |
+          printf '7\n8\n0\n' | ./build/digits_recognition | tee test.log
+          grep -q "Images: 42, errors: 0" test.log
+
+      # menu: 5 - train on training_images, 8 - test testing_images, 0 - exit
+      - name: Train from random weights
+        run: |
+          printf '5\n8\n0\n' | ./build/digits_recognition | tee train.log
+          grep -q "End of images set training" train.log
+
+  hog-demo:
+    name: Python - HOG demonstration
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install numpy scipy scikit-image matplotlib
+
+      - name: Run hog.py
+        env:
+          MPLBACKEND: Agg      # no display on the runner
+        run: python hog.py

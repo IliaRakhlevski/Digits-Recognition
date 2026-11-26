@@ -7,6 +7,8 @@ it to grayscale, resize it and filter it. A Python script shows how the HOG of a
 **Language:** C++, Python 3. **Libraries:** OpenCV (C++); NumPy, SciPy, scikit-image, Matplotlib (Python).<br/>
 **Build:** CMake. The original project report: [Course project.pdf](Course%20project.pdf).<br/>
 
+![Test images recognized with the saved weights](images/test_results.png)
+
 ---
 
 ## Algorithm
@@ -20,8 +22,8 @@ it to grayscale, resize it and filter it. A Python script shows how the HOG of a
 5. Classify the vector with a neural network: 288 inputs → 288 hidden neurons → 10 outputs, sigmoid
    activations. The recognized digit is the output with the largest value.
 
-A histogram of gradient directions changes little when the digit moves inside the image, so the network gets
-similar inputs for the same digit in different positions.
+A histogram of gradient directions changes less than the raw pixels when the digit moves inside the image,
+so the network gets more similar inputs for the same digit in different positions.
 
 **Training.** Backpropagation, learning rate 0.01, random initial weights in [-0.5, 0.5]. An image that is
 recognized incorrectly is trained until it is recognized correctly; the whole training set is repeated until
@@ -35,6 +37,8 @@ Digits drawn in Paint, BMP format.
 * [testing_images/](testing_images): 42 images of different sizes and fonts, not used for training, and
   [testing_images/failed/](testing_images/failed): 3 more test images that the saved weights recognize
   incorrectly. Name: `<digit>_<number>.bmp`.
+
+![Training set](images/training_set.png)
 
 ## Results
 
@@ -77,6 +81,9 @@ Example — test the saved weights: `7`, then `8`.
 **HOG demonstration** ([hog.py](hog.py)): loads [figure.bmp](figure.bmp) (16 × 16 pixels — one block of
 2 × 2 cells), shows the original, grayscale and edge images, and plots the histograms of the four cells.
 
+![figure.bmp and its gradients](images/hog_figure.png)
+![HOG of figure.bmp: 4 cells × 18 buckets](images/hog_histogram.png)
+
 ## Project structure
 
 ```
@@ -84,6 +91,7 @@ Source.cpp          HOG, neural network, training and testing (C++)
 hog.py              HOG demonstration (Python)
 CMakeLists.txt      build
 weights.dat         saved weights of the trained network
+images/             figures for this README
 training_images/    training set
 testing_images/     test set
 Course project.pdf  original project report
