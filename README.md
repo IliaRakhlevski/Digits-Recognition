@@ -107,4 +107,5 @@ images/             figures for this README
 training_images/    training set
 testing_images/     test set
 Course project.pdf  original project report
+LICENSE             MIT license
 ```

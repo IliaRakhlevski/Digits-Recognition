@@ -17,11 +17,13 @@ on:
       - "**.md"
       - "images/**"
       - "Course project.pdf"
+      - "LICENSE"
   pull_request:
     paths-ignore:
       - "**.md"
       - "images/**"
       - "Course project.pdf"
+      - "LICENSE"
   workflow_dispatch:
 
 permissions:
