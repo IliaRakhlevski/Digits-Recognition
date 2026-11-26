@@ -1,9 +1,12 @@
-#include <opencv2/highgui.hpp>
+#include <opencv2/imgcodecs.hpp>
 #include "opencv2/imgproc.hpp"
-#include <windows.h>
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 #include <string>
+#include <cstring>
+#include <cctype>
+#include <filesystem>
 #include <time.h>
 #include <stdlib.h>
 #include <math.h>       /* atan */
@@ -35,6 +38,9 @@ double block_bucket_vals[N_BUCKETS * BLOCK_SIZE * BLOCK_SIZE];	// block of bucke
 
 
 #define TETHA  (double)0.01
+
+#define MAX_TRAIN_STEPS   10000		// max training steps for one image
+#define MAX_TRAIN_CYCLES  1000		// max cycles of the images set training
 
 // found number by recognition and real (target) number
 unsigned int found_number;		// recognized digit index in output[]
@@ -182,14 +188,14 @@ void FilterEdges()
 
 
 // load image from file
-void LoadImage(String imageName)
+bool LoadImage(String imageName)
 {
 	image = imread(imageName); // Read the file
 
 	if (image.empty())                      // Check for invalid input
 	{
-		cout << "Could not open or find the image" << std::endl;
-		exit(0);
+		cout << "Could not open or find the image: " << imageName << std::endl;
+		return false;
 	}
 
 	//cout << image << endl;
@@ -226,6 +232,7 @@ void LoadImage(String imageName)
 	}*/
 
 	memcpy(input, block_bucket_vals, sizeof(double) * N_BUCKETS * BLOCK_SIZE * BLOCK_SIZE);
+	return true;
 }
 
 
@@ -294,13 +301,13 @@ void SetWeights()
 	for (int j = 0; j < INPUT_SIZE; j++)
 		for (int i = 0; i < HIDDEN_SIZE; i++)
 		{
-			weights_in_hid[j][i] = (double)rand() / (RAND_MAX + 1) * (0.5 - (-0.5)) + (-0.5);
+			weights_in_hid[j][i] = (double)rand() / (RAND_MAX + 1.0) * (0.5 - (-0.5)) + (-0.5);
 		}
 
 	for (int j = 0; j < HIDDEN_SIZE; j++)
 		for (int i = 0; i < OUTPUT_SIZE; i++)
 		{
-			weights_hid_out[j][i] = (double)rand() / (RAND_MAX + 1) * (0.5 - (-0.5)) + (-0.5);
+			weights_hid_out[j][i] = (double)rand() / (RAND_MAX + 1.0) * (0.5 - (-0.5)) + (-0.5);
 		}
 }
 
@@ -345,7 +352,7 @@ void MultHidOut()
 
 
 // recognize the loaded image
-void Recognize()
+void Recognize(bool print = true)
 {
 	// multiply input array by input-hidden weights
 	MultInHid();
@@ -367,7 +374,8 @@ void Recognize()
 	}
 	//cout << endl << endl;
 	found_number = max_ind;
-	cout << endl << "Recognized number: " << found_number << endl;
+	if (print)
+		cout << endl << "Recognized number: " << found_number << endl;
 }
 
 
@@ -380,21 +388,23 @@ void Train()
 	target[real_number] = 1;
 
 	AdjustWeights();
-	Recognize();
+	Recognize(false);
 }
 
 
-// performing the continiuos training the network for the current digit 
-void ContiniousTrain()
+// performing the continiuos training the network for the current digit
+bool ContiniousTrain()
 {
 	// train the network for the current digit till the network recognizes the digit
-	while (1)
+	for (long step = 0; step < MAX_TRAIN_STEPS; step++)
 	{
 		if (real_number == found_number)
-			break;
-		else
-			Train();
+			return true;
+		Train();
 	}
+
+	cout << "The digit is not learned after " << MAX_TRAIN_STEPS << " training steps" << endl;
+	return false;
 }
 
 
@@ -407,7 +417,7 @@ long num_errors;	// number of errors (incorrect recognitions)
 void ImagesSetTrainig()
 {
 	train_cycles = 0;
-	while (1)
+	while (train_cycles < MAX_TRAIN_CYCLES)
 	{
 		img_tested = num_errors = 0;
 		for (int i = 0; i <= 9; i++) // for each digit: 0 - 9
@@ -416,16 +426,10 @@ void ImagesSetTrainig()
 			for (int j = 0; j < NUM_IMG_FOR_DIGIT_TRAIN; j++) // for each font
 			{
 				// load image from 'training_images' directory and recognize it
-				CHAR Buffer[MAX_PATH];
-				char name[20];
-				GetCurrentDirectory(256, Buffer);
-				strcat(Buffer, "\\training_images\\");
-				sprintf(name, "%d_%s.bmp", i, fonts[j].c_str());
-				strcat(Buffer, name);
-				cout << "Training - " << name << endl;
-				String imageName(Buffer);
-				LoadImage(imageName);
-				Recognize();
+				string imageName = "training_images/" + to_string(i) + "_" + fonts[j] + ".bmp";
+				if (!LoadImage(imageName))
+					return;
+				Recognize(false);
 				img_tested++;
 				if (real_number == found_number) // if correct recognition => continue with the next image
 					continue;
@@ -434,13 +438,65 @@ void ImagesSetTrainig()
 			}
 		}
 		train_cycles++;
+		cout << "Cycle " << train_cycles << ": " << num_errors << " errors of " << img_tested << " images" << endl;
 		if (num_errors == 0)
 		{
 			// end of training - no errors
 			cout << endl << "End of images set training" << endl;
 			cout << "Number of cycles: " << train_cycles << endl << endl;
-			break;
+			return;
 		}
+	}
+	cout << endl << "Training stopped after " << MAX_TRAIN_CYCLES << " cycles" << endl << endl;
+}
+
+
+// recognize all images in the directory and print the accuracy and the confusion matrix
+// the first character of the image name is the real digit: <digit>_<number>.bmp
+void ImagesSetTesting(string directory)
+{
+	int confusion[OUTPUT_SIZE][OUTPUT_SIZE] = { 0 };	// [real digit][recognized digit]
+	img_tested = num_errors = 0;
+
+	for (const auto& entry : filesystem::directory_iterator(directory))
+	{
+		string name = entry.path().filename().string();
+		if (!entry.is_regular_file() || entry.path().extension() != ".bmp" || !isdigit(name[0]))
+			continue;
+
+		if (!LoadImage(entry.path().string()))
+			continue;
+		Recognize(false);
+
+		int real = name[0] - '0';
+		confusion[real][found_number]++;
+		img_tested++;
+		if (real != (int)found_number)
+		{
+			num_errors++;
+			cout << "Error: " << name << " recognized as " << found_number << endl;
+		}
+	}
+
+	if (img_tested == 0)
+	{
+		cout << "No images found in " << directory << endl;
+		return;
+	}
+
+	cout << endl << "Images: " << img_tested << ", errors: " << num_errors << ", accuracy: "
+		 << fixed << setprecision(1) << 100.0 * (img_tested - num_errors) / img_tested << "%" << endl;
+
+	cout << endl << "Confusion matrix (rows - real digit, columns - recognized digit):" << endl << "   ";
+	for (int j = 0; j < OUTPUT_SIZE; j++)
+		cout << setw(3) << j;
+	cout << endl;
+	for (int i = 0; i < OUTPUT_SIZE; i++)
+	{
+		cout << setw(3) << i;
+		for (int j = 0; j < OUTPUT_SIZE; j++)
+			cout << setw(3) << confusion[i][j];
+		cout << endl;
 	}
 }
 
@@ -473,6 +529,11 @@ void LoadWeights()
 {
 	ifstream fin;
 	fin.open("weights.dat", ios::binary);
+	if (!fin)
+	{
+		cout << "Could not open the file weights.dat" << endl;
+		return;
+	}
 
 	for (int i = 0; i < HIDDEN_SIZE; i++)
 	{
@@ -504,9 +565,11 @@ int main(int argc, char** argv)
 	{
 		cout << endl << endl << "0 - Exit" << endl << "1 - Load image" << endl << "2 - Recognize" 
 			 << endl << "3 - One image training" << endl << "4 - Digit to be trained (current: " << real_number << ")" 
-			 << endl << "5 - Images set trainig" << endl << "6 - Save weights" << endl << "7 - Load weights" 
+			 << endl << "5 - Images set trainig" << endl << "6 - Save weights" << endl << "7 - Load weights"
+			 << endl << "8 - Test images set (testing_images)" << endl << "9 - Test failed images (testing_images/failed)"
 			 << endl << "Your choice: ";
-		cin >> choice;
+		if (!(cin >> choice)) // end of input
+			break;
 
 		if (choice == '0') // exit the program
 			break;
@@ -526,7 +589,8 @@ int main(int argc, char** argv)
 			}
 			case '3':	// perform continous training of the current image
 			{
-				ContiniousTrain();
+				if (ContiniousTrain())
+					cout << endl << "Recognized number: " << found_number << endl;
 				break;
 			}
 			case '4':	// enter the target digit to be trained for the current image
@@ -534,7 +598,12 @@ int main(int argc, char** argv)
 				char digit;
 				cout << "Enter the digit to be trained: ";
 				cin >> digit;
-				real_number = (int)digit - 48;
+				if (digit < '0' || digit > '9')
+				{
+					cout << "Not a digit" << endl;
+					break;
+				}
+				real_number = digit - '0';
 				break;
 			}
 			case '5':	// training of the images set 
@@ -550,6 +619,16 @@ int main(int argc, char** argv)
 			case '7':	// load weight from file
 			{
 				LoadWeights();
+				break;
+			}
+			case '8':	// recognize all testing images
+			{
+				ImagesSetTesting("testing_images");
+				break;
+			}
+			case '9':	// recognize the images that were recognized incorrectly
+			{
+				ImagesSetTesting("testing_images/failed");
 				break;
 			}
 			default:
