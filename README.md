@@ -1,4 +1,7 @@
 # Digits Recognition
+
+[![CI](https://github.com/IliaRakhlevski/Digits-Recognition/actions/workflows/ci.yml/badge.svg)](https://github.com/IliaRakhlevski/Digits-Recognition/actions/workflows/ci.yml)
+
 *M.Sc. course project · Intelligent Systems · Introduction to Intelligent Systems · [Afeka Tel Aviv Academic College of Engineering](https://www.afeka.ac.il/) · 2019*
 
 Recognition of printed digits (0–9) with a Histogram of Oriented Gradients (HOG) and a neural network trained

@@ -1,6 +1,6 @@
 # CI for Digits-Recognition.
 #
-# On every push to main and on every pull request:
+# On every push to main and on every pull request (not for documentation-only changes):
 #   1. The C++ program is built with CMake, GCC and OpenCV on Linux.
 #      OpenCV is built from source with the three modules the program uses
 #      (core, imgproc, imgcodecs) and cached: the apt package libopencv-dev
@@ -13,7 +13,15 @@ name: CI
 on:
   push:
     branches: [main]
+    paths-ignore:              # documentation only: nothing to build or test
+      - "**.md"
+      - "images/**"
+      - "Course project.pdf"
   pull_request:
+    paths-ignore:
+      - "**.md"
+      - "images/**"
+      - "Course project.pdf"
   workflow_dispatch:
 
 permissions:
