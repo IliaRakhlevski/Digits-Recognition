@@ -4,13 +4,20 @@
 
 *M.Sc. course project · Intelligent Systems · Introduction to Intelligent Systems · [Afeka Tel Aviv Academic College of Engineering](https://www.afeka.ac.il/) · 2019*
 
-Recognition of printed digits (0–9) with a Histogram of Oriented Gradients (HOG) and a neural network trained
-by backpropagation. Both are implemented from scratch in C++; OpenCV is used only to read the image, convert
-it to grayscale, resize it and filter it. A Python script shows how the HOG of an image is built.<br/>
+Recognition of printed digits (0–9) with a **neural network and HOG features written from scratch in C++** —
+no machine learning library.
+
+* **Neural network:** a fully connected network 288 → 288 → 10 with sigmoid activations: forward pass,
+  backpropagation training, random weight initialization, saving and loading the weights.
+* **HOG (Histogram of Oriented Gradients):** gradient magnitudes and directions, histograms of 18 direction
+  buckets with interpolation between neighbouring buckets, L2 normalization.
+* **OpenCV** is used only to read the image, convert it to grayscale, resize it and apply the gradient filters.
+
+A Python script shows step by step how the HOG of an image is built.<br/>
 **Language:** C++, Python 3. **Libraries:** OpenCV (C++); NumPy, SciPy, scikit-image, Matplotlib (Python).<br/>
 **Build:** CMake. The original project report: [Course project.pdf](Course%20project.pdf).<br/>
 
-![Test images recognized with the saved weights](images/test_results.png)
+![Recognition pipeline](images/pipeline.png)
 
 ---
 
@@ -44,6 +51,8 @@ Digits drawn in Paint, BMP format.
 ![Training set](images/training_set.png)
 
 ## Results
+
+![Test images recognized with the saved weights](images/test_results.png)
 
 | Weights | Accuracy on the 45 test images |
 |---|---|
