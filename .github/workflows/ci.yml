@@ -2,6 +2,9 @@
 #
 # On every push to main and on every pull request:
 #   1. The C++ program is built with CMake, GCC and OpenCV on Linux.
+#      OpenCV is built from source with the three modules the program uses
+#      (core, imgproc, imgcodecs) and cached: the apt package libopencv-dev
+#      installs hundreds of dependencies (video, GUI, GDAL) and takes too long.
 #   2. The saved weights (weights.dat) must recognize all 42 images in testing_images.
 #   3. Training from random weights must finish: all 70 training images recognized correctly.
 #   4. The HOG demonstration (hog.py) runs without errors (plots are not shown).
@@ -19,20 +22,43 @@ permissions:
 jobs:
   cpp:
     name: Linux - build and test
-    runs-on: ubuntu-latest
-    timeout-minutes: 15        # stop a stuck job instead of waiting up to 6 hours
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30        # stop a stuck job instead of waiting up to 6 hours
+    env:
+      OPENCV_VERSION: "4.10.0"
+      OPENCV_DIR: ${{ github.workspace }}/../opencv-install
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install OpenCV
+      - name: Cache OpenCV
+        id: cache-opencv
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.OPENCV_DIR }}
+          key: opencv-${{ env.OPENCV_VERSION }}-core-imgproc-imgcodecs-ubuntu-24.04
+
+      - name: Build OpenCV (core, imgproc, imgcodecs)
+        if: steps.cache-opencv.outputs.cache-hit != 'true'
         run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends libopencv-dev
+          git clone --depth 1 --branch "$OPENCV_VERSION" https://github.com/opencv/opencv.git ../opencv
+          cmake -S ../opencv -B ../opencv-build -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX="$OPENCV_DIR" \
+            -DBUILD_LIST=core,imgproc,imgcodecs -DBUILD_SHARED_LIBS=OFF -DBUILD_ZLIB=ON \
+            -DBUILD_TESTS=OFF -DBUILD_PERF_TESTS=OFF -DBUILD_EXAMPLES=OFF -DBUILD_DOCS=OFF \
+            -DBUILD_opencv_apps=OFF -DBUILD_JAVA=OFF -DBUILD_opencv_python3=OFF \
+            -DWITH_IPP=OFF -DWITH_ITT=OFF -DWITH_OPENCL=OFF -DWITH_LAPACK=OFF -DWITH_EIGEN=OFF \
+            -DWITH_JPEG=OFF -DWITH_PNG=OFF -DWITH_TIFF=OFF -DWITH_WEBP=OFF -DWITH_OPENJPEG=OFF \
+            -DWITH_JASPER=OFF -DWITH_OPENEXR=OFF -DWITH_AVIF=OFF -DWITH_IMGCODEC_HDR=OFF \
+            -DWITH_IMGCODEC_SUNRASTER=OFF -DWITH_IMGCODEC_PXM=OFF -DWITH_IMGCODEC_PFM=OFF \
+            -DWITH_FFMPEG=OFF -DWITH_GSTREAMER=OFF -DWITH_V4L=OFF -DWITH_GTK=OFF -DWITH_QT=OFF \
+            -DWITH_1394=OFF -DWITH_ADE=OFF -DWITH_PROTOBUF=OFF -DWITH_TBB=OFF -DWITH_VA=OFF
+          cmake --build ../opencv-build --parallel 4
+          cmake --install ../opencv-build
 
       - name: Build
         run: |
-          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DOpenCV_DIR="$OPENCV_DIR/lib/cmake/opencv4"
           cmake --build build
 
       # menu: 7 - load weights, 8 - test testing_images, 0 - exit
@@ -49,7 +75,7 @@ jobs:
 
   hog-demo:
     name: Python - HOG demonstration
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
 
     steps:
