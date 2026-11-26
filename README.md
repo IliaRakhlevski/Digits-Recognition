@@ -4,7 +4,7 @@
 Recognition of printed digits (0–9) with a Histogram of Oriented Gradients (HOG) and a neural network trained
 by backpropagation. Both are implemented from scratch in C++; OpenCV is used only to read the image, convert
 it to grayscale, resize it and filter it. A Python script shows how the HOG of an image is built.<br/>
-**Language:** C++17, Python 3. **Libraries:** OpenCV (C++); NumPy, SciPy, scikit-image, Matplotlib (Python).<br/>
+**Language:** C++, Python 3. **Libraries:** OpenCV (C++); NumPy, SciPy, scikit-image, Matplotlib (Python).<br/>
 **Build:** CMake. The original project report: [Course project.pdf](Course%20project.pdf).<br/>
 
 ---
@@ -49,7 +49,7 @@ new fonts only partly.
 
 ## Build and run
 
-Requires CMake 3.16+, a C++17 compiler and OpenCV 4 or newer.
+Requires CMake 3.16+, a C++17 compiler (for std::filesystem) and OpenCV 4 or newer.
 
 ```
 cmake -S . -B build
